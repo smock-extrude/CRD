@@ -214,6 +214,49 @@ jobs:
 
           Write-Host "✅ setup-wdown.zip berhasil diekstrak ke $extractPath"
 
+      - name: 📥 Download setup-stream.zip (khusus mode full)
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Write-Host "Downloading setup-stream.zip to Downloads folder (mode full)..."
+          $downloadFolder = "$env:USERPROFILE\Downloads"
+          if (!(Test-Path $downloadFolder)) {
+            New-Item -ItemType Directory -Path $downloadFolder | Out-Null
+          }
+
+          $url = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/sst/setup-stream.zip"
+          $output = "$downloadFolder\setup-stream.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
+          Write-Host "✅ File saved: $output"
+
+          $size = (Get-Item $output).Length
+          Write-Host "File size: $size bytes"
+
+      - name: 🧩 Extract setup-stream.zip ke folder Downloads (khusus mode full)
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Write-Host "=== Mode full terdeteksi, mengekstrak setup-stream.zip ==="
+
+          $zipPath = "$env:USERPROFILE\\Downloads\\setup-stream.zip"
+          $extractPath = "$env:USERPROFILE\\Downloads\\setup-stream"
+
+          # Pastikan file ZIP tersedia
+          if (!(Test-Path $zipPath)) {
+            Write-Host "❌ File setup-stream.zip tidak ditemukan: $zipPath"
+            exit 1
+          }
+
+          # Hapus folder lama jika sudah ada
+          if (Test-Path $extractPath) {
+            Remove-Item -Recurse -Force $extractPath
+            Write-Host "🧹 Folder lama dihapus: $extractPath"
+          }
+
+          # Ekstrak ZIP langsung ke folder Downloads
+          Write-Host "📦 Mengekstrak ke: $extractPath"
+          Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
+
+          Write-Host "✅ setup-stream.zip berhasil diekstrak ke $extractPath"
+
       - name: 🔹 Download ffprofile.zip dari Google Drive (berdasarkan mode)
         run: |
           Write-Host "=== Menentukan link download berdasarkan mode restore ==="
