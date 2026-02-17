@@ -143,8 +143,8 @@ jobs:
           $installer = "$env:TEMP\VirtualBox-7.2.6a-172322-Win.exe"
           Invoke-WebRequest -Uri $url -OutFile $installer -UseBasicParsing
           Write-Host "Running installer silently..."
-          Start-Process -FilePath $installer -ArgumentList "/VERYSILENT /NORESTART /SP-" -Wait
-          Write-Host "VirtualBox installed successfully."
+          Start-Process -FilePath $installer -ArgumentList "--silent" -Wait
+          Write-Host "VirtualBox installation finished."
 
       - name: 📥 Download auto-send-email.zip (khusus mode minimum)
         if: ${{ inputs.mode_restore == 'minimum' }}
