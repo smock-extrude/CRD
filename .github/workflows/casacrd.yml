@@ -1,4 +1,4 @@
-name: CasaOS Via CRD
+name: Windows CasaOS Via CRD
 
 on:
   workflow_dispatch:
