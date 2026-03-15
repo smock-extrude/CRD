@@ -1,4 +1,4 @@
-name: Windows CasaOS Via CRD
+name: RDP Windows Via CRD
 
 on:
   workflow_dispatch:
@@ -617,8 +617,8 @@ jobs:
         if: ${{ inputs.mode_restore == 'full' }}
         shell: cmd
         run: |
-          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" registervm "C:\Users\runneradmin\Downloads\setup-stream\Debian13\Debian13.vbox"
-          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" startvm "Debian13" --type headless
+          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" registervm "C:\Users\runneradmin\Downloads\setup-stream\CasaOS\CasaOS.vbox"
+          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" startvm "CasaOS" --type headless
 
       - name: ⏳ Keep alive
         run: |
