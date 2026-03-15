@@ -1,4 +1,4 @@
-name: Windows CS Via CRD
+name: RDP CS Windows Via CRD
 
 on:
   workflow_dispatch:
@@ -224,6 +224,23 @@ jobs:
           Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
 
           Write-Host "✅ setup-wdown.zip berhasil diekstrak ke $extractPath"
+
+      - name: 📥 Download setup-stream.zip (khusus mode full)
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Write-Host "Downloading setup-stream.zip to Downloads folder (mode full)..."
+          $downloadFolder = "$env:USERPROFILE\Downloads"
+          if (!(Test-Path $downloadFolder)) {
+            New-Item -ItemType Directory -Path $downloadFolder | Out-Null
+          }
+
+          $url = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/sst/setup-stream.zip"
+          $output = "$downloadFolder\setup-stream.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
+          Write-Host "✅ File saved: $output"
+
+          $size = (Get-Item $output).Length
+          Write-Host "File size: $size bytes"
 
       - name: 📦 Download casaos
         if: ${{ inputs.mode_restore == 'full' }}
