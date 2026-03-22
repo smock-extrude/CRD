@@ -205,7 +205,7 @@ jobs:
           Write-Host "=== Mode full terdeteksi, mengekstrak setup-wdown.zip ==="
 
           $zipPath = "$env:USERPROFILE\\Downloads\\setup-wdown.zip"
-          $extractPath = "$env:USERPROFILE\\Downloads\\setup-wdown"
+          $extractPath = "D:\setup-wdown"
 
           # Pastikan file ZIP tersedia
           if (!(Test-Path $zipPath)) {
@@ -225,31 +225,14 @@ jobs:
 
           Write-Host "✅ setup-wdown.zip berhasil diekstrak ke $extractPath"
 
-      - name: 📥 Download setup-stream.zip (khusus mode full)
+      - name: 📦 Download VM CasaOS
         if: ${{ inputs.mode_restore == 'full' }}
         run: |
-          Write-Host "Downloading setup-stream.zip to Downloads folder (mode full)..."
-          $downloadFolder = "$env:USERPROFILE\Downloads"
-          if (!(Test-Path $downloadFolder)) {
-            New-Item -ItemType Directory -Path $downloadFolder | Out-Null
-          }
-
-          $url = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/sst/setup-stream.zip"
-          $output = "$downloadFolder\setup-stream.zip"
-          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
-          Write-Host "✅ File saved: $output"
-
-          $size = (Get-Item $output).Length
-          Write-Host "File size: $size bytes"
-
-      - name: 📦 Download casaos
-        if: ${{ inputs.mode_restore == 'full' }}
-        run: |
-          Write-Host "=== Mode full terdeteksi, memulai download CasaOS multipart ZIP ==="
+          Write-Host "=== Mode full terdeteksi, memulai download VM CasaOS multipart ZIP ==="
 
           $downloadFolder = "$env:USERPROFILE\Downloads"
-          $url1 = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/cs/CasaOS.zip.001"
-          $url2 = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/cs/CasaOS.zip.002"
+          $url1 = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/cs/setup-stream.zip.001"
+          $url2 = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/cs/setup-stream.zip.002"
 
           if (!(Test-Path $downloadFolder)) {
           New-Item -ItemType Directory -Path $downloadFolder | Out-Null
@@ -297,7 +280,7 @@ jobs:
 
           & 7z x "$downloadFolder\CasaOS.zip.001" -o"$extractPath" -y | Out-Null
 
-          $dest = "$env:USERPROFILE\Downloads\setup-stream"
+          $dest = "D:\setup-stream"
 
           Write-Host "=== Memindahkan hasil ekstraksi ke $dest ==="
 
@@ -396,62 +379,6 @@ jobs:
           # Salin dan timpa file
           Copy-Item -Path $source -Destination $dest -Recurse -Force
           Write-Host "Semua file berhasil disalin dan ditimpa jika sudah ada."
-
-      # ===================== CHROME PROFILE =====================
-
-      - name: 🔹 Download chprofile.zip
-        if: ${{ inputs.mode_restore == 'full' }}
-        run: |
-          Write-Host "=== Mengunduh chprofile.zip ==="
-
-          # Ganti URL ini dengan URL backup Chrome kamu jika berbeda
-          $url = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/chp/chprofile.zip"
-
-          $output = "$env:USERPROFILE\Downloads\chprofile.zip"
-
-          Write-Host "Mengunduh dari: $url"
-          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
-          Write-Host "📥 Download selesai: $output"
-
-      - name: 🔹 Ekstrak chprofile.zip ke folder sementara
-        if: ${{ inputs.mode_restore == 'full' }}
-        run: |
-          Write-Host "=== Mengekstrak chprofile.zip ==="
-          $zipPath = "$env:USERPROFILE\Downloads\chprofile.zip"
-          $extractPath = "$env:USERPROFILE\Downloads\chprofile"
-
-          if (!(Test-Path $zipPath)) {
-            Write-Host "❌ File chprofile.zip tidak ditemukan!"
-            exit 1
-          }
-
-          if (Test-Path $extractPath) {
-            Remove-Item -Recurse -Force $extractPath
-            Write-Host "🧹 Folder lama dihapus: $extractPath"
-          }
-
-          Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
-          Write-Host "✅ Extract selesai ke: $extractPath"
-
-      - name: 🔹 Pindahkan hasil extract chprofile → Chrome User Data
-        if: ${{ inputs.mode_restore == 'full' }}
-        run: |
-          Write-Host "=== Menyalin Chrome Profile ==="
-
-          $source = "$env:USERPROFILE\Downloads\chprofile\*"
-          $dest   = "C:\Users\runneradmin\AppData\Local\Google\Chrome\User Data"
-          # Alternatif lebih dinamis:
-          # $dest = Join-Path $env:LOCALAPPDATA "Google\Chrome\User Data"
-
-          if (!(Test-Path $dest)) {
-            New-Item -ItemType Directory -Force -Path $dest | Out-Null
-            Write-Host "📁 Folder Chrome User Data dibuat."
-          }
-
-          Copy-Item -Path $source -Destination $dest -Recurse -Force
-          Write-Host "🔥 Chrome profile berhasil dipulihkan."
-
-      # =========================================================
 
       - name: 🧹 Hapus file ZIP sesuai mode restore
         run: |
@@ -630,12 +557,45 @@ jobs:
 
           Write-Host "✅ Selesai membuat dan pin folder ke Quick Access."
 
+      - name: 🌐 Set network (ubah IP)
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: powershell -ExecutionPolicy Bypass -File "D:\setup-stream\ubah-ip.ps1"
+
       - name: Register and Start VirtualBox VM
         if: ${{ inputs.mode_restore == 'full' }}
         shell: cmd
         run: |
-          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" registervm "C:\Users\runneradmin\Downloads\setup-stream\CasaOS\CasaOS.vbox"
+          "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" registervm "D:\setup-stream\CasaOS\CasaOS.vbox"
           "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" startvm "CasaOS" --type headless
+
+      - name: ⏳ Wait VM Ready (ping)
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          $ip = "192.168.56.1"
+          $maxTry = 60
+          $count = 0
+
+          Write-Host "Menunggu VM siap di $ip ..."
+
+          while ($count -lt $maxTry) {
+            if (Test-Connection -ComputerName $ip -Count 1 -Quiet) {
+            Write-Host "✅ VM sudah ready!"
+            exit 0
+          }
+
+          Start-Sleep -Seconds 1
+          $count++
+          }
+
+          Write-Host "❌ VM tidak merespon"
+          exit 1
+
+      - name: 🚀 Install & Run Bitvise
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Start-Process -FilePath "D:\setup-stream\BvSshClient-Inst.exe" -ArgumentList "-acceptEULA -installDir=`"C:\Program Files\Bitvise SSH Client`"" -Wait
+          Start-Sleep -Seconds 2
+          Start-Process "C:\Program Files\Bitvise SSH Client\BvSsh.exe" -ArgumentList "-host=192.168.56.1 -user=root -password=1 -openSftp=y -loginOnStartup"
 
       - name: ⏳ Keep alive
         run: |
