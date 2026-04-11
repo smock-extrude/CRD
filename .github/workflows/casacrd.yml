@@ -73,7 +73,7 @@ jobs:
             $code = $rawAuth.Trim()
           }
 
-          "code=$code"                      | Out-File -Append $env:GITHUB_OUTPUT
+          "code=$code"                    | Out-File -Append $env:GITHUB_OUTPUT
           "pcname=${{ inputs.gh_pc_name }}" | Out-File -Append $env:GITHUB_OUTPUT
           "pin=${{ inputs.gh_pin_crd }}"    | Out-File -Append $env:GITHUB_OUTPUT
           "runtime=$runtime"                | Out-File -Append $env:GITHUB_OUTPUT
@@ -168,8 +168,8 @@ jobs:
         run: |
           Write-Host "=== Mengekstrak auto-send-email.zip langsung ke Downloads (mode minimum) ==="
 
-          $zipPath = "$env:USERPROFILE\\Downloads\\auto-send-email.zip"
-          $extractPath = "$env:USERPROFILE\\Downloads"  # langsung ke Downloads
+          $zipPath = "$env:USERPROFILE\Downloads\auto-send-email.zip"
+          $extractPath = "$env:USERPROFILE\Downloads"  # langsung ke Downloads
 
           # Pastikan file ZIP sudah ada
           if (!(Test-Path $zipPath)) {
@@ -204,7 +204,7 @@ jobs:
         run: |
           Write-Host "=== Mode full terdeteksi, mengekstrak setup-wdown.zip ==="
 
-          $zipPath = "$env:USERPROFILE\\Downloads\\setup-wdown.zip"
+          $zipPath = "$env:USERPROFILE\Downloads\setup-wdown.zip"
           $extractPath = "D:\setup-wdown"
 
           # Pastikan file ZIP tersedia
@@ -292,6 +292,19 @@ jobs:
 
           Write-Host "✅ CasaOS berhasil didownload, diekstrak, dan dipindahkan ke setup-stream."
 
+      - name: Setup FFmpeg Manual
+        if: ${{ inputs.mode_restore == 'full' }}
+        shell: cmd
+        run: |
+          echo === Download FFmpeg ===
+          curl -L -o ffmpeg.zip "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/fmp/ffmpeg.zip"
+
+          echo === Extract ke C:\ ===
+          powershell -Command "Expand-Archive -Path 'ffmpeg.zip' -DestinationPath 'C:\'"
+
+          echo === Set PATH ===
+          setx PATH "C:\ffmpeg\bin;%PATH%"
+
       - name: 🔹 Download ffprofile.zip dari Google Drive (berdasarkan mode)
         run: |
           Write-Host "=== Menentukan link download berdasarkan mode restore ==="
@@ -338,30 +351,30 @@ jobs:
 
           # Download semua part
           Write-Host "Mengunduh Subtitle.Edit.zip.001 ..."
-          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.001" -OutFile "$downloadFolder\\Subtitle.Edit.zip.001" -UseBasicParsing
+          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.001" -OutFile "$downloadFolder\Subtitle.Edit.zip.001" -UseBasicParsing
           Write-Host "Mengunduh Subtitle.Edit.zip.002 ..."
-          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.002" -OutFile "$downloadFolder\\Subtitle.Edit.zip.002" -UseBasicParsing
+          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.002" -OutFile "$downloadFolder\Subtitle.Edit.zip.002" -UseBasicParsing
           Write-Host "Mengunduh Subtitle.Edit.zip.003 ..."
-          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.003" -OutFile "$downloadFolder\\Subtitle.Edit.zip.003" -UseBasicParsing
+          Invoke-WebRequest -Uri "$urlBase/Subtitle.Edit.zip.003" -OutFile "$downloadFolder\Subtitle.Edit.zip.003" -UseBasicParsing
 
           # Ekstrak menggunakan 7-Zip
           Write-Host "=== Mengekstrak Subtitle Edit multipart ZIP ==="
-          $extractPath = "$env:TEMP\\SubtitleEditExtract"
+          $extractPath = "$env:TEMP\SubtitleEditExtract"
           if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath }
           New-Item -ItemType Directory -Path $extractPath | Out-Null
 
           # Gunakan 7z bawaan runner Windows
-          & 7z x "$downloadFolder\\Subtitle.Edit.zip.001" -o"$extractPath" -y | Out-Null
+          & 7z x "$downloadFolder\Subtitle.Edit.zip.001" -o"$extractPath" -y | Out-Null
 
           # Pindahkan hasil ekstraksi ke AppData\Roaming
-          $dest = "C:\\Users\\runneradmin\\AppData\\Roaming"
+          $dest = "C:\Users\runneradmin\AppData\Roaming"
           Write-Host "=== Memindahkan hasil ekstraksi ke $dest ==="
 
           if (!(Test-Path $dest)) {
             New-Item -ItemType Directory -Path $dest | Out-Null
           }
 
-          Copy-Item -Path "$extractPath\\*" -Destination $dest -Recurse -Force
+          Copy-Item -Path "$extractPath\*" -Destination $dest -Recurse -Force
           Write-Host "✅ Subtitle Edit multipart ZIP berhasil diekstrak dan dipindahkan."
 
       - name: 🔹 Pindahkan hasil extract ke folder Firefox Roaming
@@ -388,20 +401,24 @@ jobs:
 
           # Tentukan daftar file ZIP
           $baseFiles = @(
-            "$env:USERPROFILE\\Downloads\\ffprofile.zip",
-            "$env:USERPROFILE\\Downloads\\chprofile.zip",
-            "$env:USERPROFILE\\Downloads\\Subtitle.Edit.zip.001",
-            "$env:USERPROFILE\\Downloads\\Subtitle.Edit.zip.002",
-            "$env:USERPROFILE\\Downloads\\Subtitle.Edit.zip.003"
+            "$env:USERPROFILE\Downloads\ffprofile.zip",
+            "$env:USERPROFILE\Downloads\chprofile.zip",
+            "$env:USERPROFILE\Downloads\Subtitle.Edit.zip.001",
+            "$env:USERPROFILE\Downloads\Subtitle.Edit.zip.002",
+            "$env:USERPROFILE\Downloads\Subtitle.Edit.zip.003"
           )
 
-          $autoSend = "$env:USERPROFILE\\Downloads\\auto-send-email.zip"
-          $wdown    = "$env:USERPROFILE\\Downloads\\setup-wdown.zip"
+          $autoSend = "$env:USERPROFILE\Downloads\auto-send-email.zip"
+          $wdown    = "$env:USERPROFILE\Downloads\setup-wdown.zip"
 
           # Tentukan file yang akan dihapus berdasarkan mode
           if ($mode -eq "full") {
             Write-Host "🧩 Mode full → auto-send-email.zip dipertahankan."
-            $deleteFiles = $baseFiles + $wdown
+            $deleteFiles = $baseFiles + @(
+              "$env:USERPROFILE\Downloads\CasaOS.zip.001",
+              "$env:USERPROFILE\Downloads\CasaOS.zip.002",
+              $wdown
+            )
           } elseif ($mode -eq "minimum") {
             Write-Host "🧩 Mode minimum → setup-wdown.zip dipertahankan."
             $deleteFiles = $baseFiles + $autoSend
@@ -425,7 +442,7 @@ jobs:
           }
 
           # ====== Hapus folder ffprofile di semua mode ======
-          $ffprofileFolder = "$env:USERPROFILE\\Downloads\\ffprofile"
+          $ffprofileFolder = "$env:USERPROFILE\Downloads\ffprofile"
           if (Test-Path $ffprofileFolder) {
             try {
               Remove-Item -Recurse -Force $ffprofileFolder
@@ -438,7 +455,7 @@ jobs:
           }
 
           # ====== Hapus folder chprofile di semua mode ======
-          $chprofileFolder = "$env:USERPROFILE\\Downloads\\chprofile"
+          $chprofileFolder = "$env:USERPROFILE\Downloads\chprofile"
           if (Test-Path $chprofileFolder) {
             try {
               Remove-Item -Recurse -Force $chprofileFolder
@@ -457,7 +474,7 @@ jobs:
         run: |
           Write-Host "=== Mengunduh dan menginstal Bulk Rename Utility ==="
           $url = "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/bru/BRU_setup_4.1.0.0.exe"
-          $installer = "$env:TEMP\\BRU_setup.exe"
+          $installer = "$env:TEMP\BRU_setup.exe"
 
           # Unduh installer
           Write-Host "⬇️ Mengunduh BRU installer..."
@@ -473,7 +490,7 @@ jobs:
           Start-Process -FilePath $installer -ArgumentList "/VERYSILENT /NORESTART /SP-" -Wait
 
           # Verifikasi instalasi
-          $bruPath = "C:\\Program Files\\Bulk Rename Utility\\Bulk Rename Utility.exe"
+          $bruPath = "C:\Program Files\Bulk Rename Utility\Bulk Rename Utility.exe"
           if (Test-Path $bruPath) {
             Write-Host "✅ Bulk Rename Utility berhasil diinstal di: $bruPath"
           } else {
@@ -491,11 +508,13 @@ jobs:
           $videoFolder    = Join-Path $userRoot "Downloads\Video"
           $twitterFolder  = Join-Path $userRoot "Downloads\twitter_media_harvest"
           $mumuDownload   = Join-Path $userRoot "Documents\MuMuSharedFolder\Download"
+          $wdownFolder    = "D:\setup-wdown"
 
           $folders = @(
             $videoFolder,
             $twitterFolder,
-            $mumuDownload
+            $mumuDownload,
+            $wdownFolder
           )
 
           # Buat semua folder kalau belum ada
@@ -547,10 +566,12 @@ jobs:
           }
 
           # Urutan pin yang diinginkan:
-          # 1. Video
-          # 2. Download (MuMuSharedFolder)
-          # 3. twitter_media_harvest
+          # 1. setup-wdown (di posisi atas)
+          # 2. Video
+          # 3. Download (MuMuSharedFolder)
+          # 4. twitter_media_harvest
 
+          Reset-QuickAccessPin -Path $wdownFolder   -Label "setup-wdown"
           Reset-QuickAccessPin -Path $videoFolder   -Label "Video"
           Reset-QuickAccessPin -Path $mumuDownload  -Label "Download (MuMuSharedFolder)"
           Reset-QuickAccessPin -Path $twitterFolder -Label "twitter_media_harvest"
