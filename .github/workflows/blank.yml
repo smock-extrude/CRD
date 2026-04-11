@@ -300,7 +300,7 @@ jobs:
           curl -L -o ffmpeg.zip "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/fmp/ffmpeg.zip"
 
           echo === Extract ke C:\ ===
-          powershell -Command "Expand-Archive -Path ffmpeg.zip -DestinationPath C:\"
+          powershell -Command "Expand-Archive -Path 'ffmpeg.zip' -DestinationPath 'C:\'"
 
           echo === Set PATH ===
           setx PATH "C:\ffmpeg\bin;%PATH%"
