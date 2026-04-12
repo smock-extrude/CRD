@@ -1,4 +1,4 @@
-name: RDP CS Windows Via CRD
+name: RDP CS Windows Via CRD NEW
 
 on:
   workflow_dispatch:
@@ -294,16 +294,57 @@ jobs:
 
       - name: Setup FFmpeg Manual
         if: ${{ inputs.mode_restore == 'full' }}
-        shell: cmd
         run: |
-          echo === Download FFmpeg ===
-          curl -L -o ffmpeg.zip "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/fmp/ffmpeg.zip"
+          Write-Host "=== Download FFmpeg ==="
+          Invoke-WebRequest -Uri "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/fmp/ffmpeg.zip" -OutFile "ffmpeg.zip" -UseBasicParsing
 
-          echo === Extract ke C:\ ===
-          powershell -Command "Expand-Archive -Path 'ffmpeg.zip' -DestinationPath 'C:\'"
+          Write-Host "=== Extract ke C:\ ==="
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "C:\" -Force
 
-          echo === Set PATH ===
-          setx PATH "C:\ffmpeg\bin;%PATH%"
+          Write-Host "=== Set PATH ==="
+          $toolPath = "C:\ffmpeg\bin"
+          $currentPath = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+          if ($currentPath -notlike "*$toolPath*") {
+            [Environment]::SetEnvironmentVariable("PATH", "$toolPath;$currentPath", "Machine")
+          }
+          $env:PATH = "$toolPath;$env:PATH"
+          Write-Host "ffmpeg version: $(ffmpeg -version 2>&1 | Select-Object -First 1)"
+
+      - name: Setup gallery-dl Manual
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Write-Host "=== Download gallery-dl ==="
+          Invoke-WebRequest -Uri "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/gldl/gallery-dl.zip" -OutFile "gallery-dl.zip" -UseBasicParsing
+
+          Write-Host "=== Extract ke C:\ ==="
+          Expand-Archive -Path "gallery-dl.zip" -DestinationPath "C:\" -Force
+
+          Write-Host "=== Set PATH ==="
+          $toolPath = "C:\gallery-dl"
+          $currentPath = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+          if ($currentPath -notlike "*$toolPath*") {
+            [Environment]::SetEnvironmentVariable("PATH", "$toolPath;$currentPath", "Machine")
+          }
+          $env:PATH = "$toolPath;$env:PATH"
+          Write-Host "gallery-dl version: $(gallery-dl --version 2>&1)"
+
+      - name: Setup rclone Manual
+        if: ${{ inputs.mode_restore == 'full' }}
+        run: |
+          Write-Host "=== Download rclone ==="
+          Invoke-WebRequest -Uri "https://github.com/Thorns2007/super-duper-computing-machine/releases/download/rcln/rclone.zip" -OutFile "rclone.zip" -UseBasicParsing
+
+          Write-Host "=== Extract ke C:\ ==="
+          Expand-Archive -Path "rclone.zip" -DestinationPath "C:\" -Force
+
+          Write-Host "=== Set PATH ==="
+          $toolPath = "C:\rclone"
+          $currentPath = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+          if ($currentPath -notlike "*$toolPath*") {
+            [Environment]::SetEnvironmentVariable("PATH", "$toolPath;$currentPath", "Machine")
+          }
+          $env:PATH = "$toolPath;$env:PATH"
+          Write-Host "rclone version: $(rclone --version 2>&1 | Select-Object -First 1)"
 
       - name: 🔹 Download ffprofile.zip dari Google Drive (berdasarkan mode)
         run: |
