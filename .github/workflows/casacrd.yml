@@ -1,4 +1,4 @@
-name: RDP CS Windows Via CRD NEW
+name: RDP CS Windows Via CRD
 
 on:
   workflow_dispatch:
